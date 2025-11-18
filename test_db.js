@@ -6,7 +6,9 @@ const connection = mysql.createConnection({
   user: process.env.DB_USER || 'kynmmarshall',
   password: process.env.DB_PASSWORD || 'Kamdeu2007....',
   database: process.env.DB_NAME || 'pick_my_dish',
-  port: process.env.DB_PORT || 3306
+  port: process.env.DB_PORT || 3306,
+   // Add this line to force IPv4
+  socketPath: process.env.DB_HOST === 'localhost' ? '/var/run/mysqld/mysqld.sock' : undefined
 });
 
 console.log('Testing database connection...');
