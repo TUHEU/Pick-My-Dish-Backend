@@ -25,7 +25,7 @@ app.get('/', (req, res) => {
 // Test database connection
 app.get('/api/test-db', async (req, res) => {
   try {
-    const [results] = await db.execute('SELECT * FROM categories');
+    const [results] = await db.execute('SELECT * FROM categories');  // NEW WAY
     res.json({ message: 'Database connected!', categories: results });
   } catch (error) {
     res.status(500).json({ error: 'Database error: ' + error.message });
