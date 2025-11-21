@@ -3,12 +3,11 @@ require('dotenv').config();
 
 const connection = mysql.createConnection({
   host: process.env.DB_HOST || 'localhost',
-  user: process.env.DB_USER || 'kynmmarshall',
+  user: process.env.DB_USER || 'root',
   password: process.env.DB_PASSWORD || 'Kamdeu2007....',
   database: process.env.DB_NAME || 'pick_my_dish',
-  port: process.env.DB_PORT || 3306,
-   // Add this line to force IPv4
-  socketPath: process.env.DB_HOST === 'localhost' ? '/var/run/mysqld/mysqld.sock' : undefined
+  port: process.env.DB_PORT || 3306
+  // REMOVE the socketPath line entirely
 });
 
 console.log('Testing database connection...');
