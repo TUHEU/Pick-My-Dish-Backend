@@ -18,7 +18,7 @@ router.put('/username', async (req, res) => {
     console.log('📝 UPDATE USERNAME REQUEST:', req.body);
     
     const { username } = req.body;
-    const userId = 1; // Temporary - this should come from authentication
+    const userId = 13; // Temporary - this should come from authentication
     
     console.log('🔧 Updating user:', userId, 'to username:', username);
     
