@@ -64,7 +64,9 @@ router.post('/login', async (req, res) => {
     console.log('📋 User details:', { 
       id: users[0].id, 
       username: users[0].username, 
-      email: users[0].email 
+      email: users[0].email,
+      profile_image_path: users[0].profile_image_path,
+      created_at: users[0].created_at  
     });
     
     res.json({ message: 'Login successful', user: users[0], userId: users[0].id });

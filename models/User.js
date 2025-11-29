@@ -4,19 +4,19 @@ const bcrypt = require('bcryptjs');
 class User {
   // Create new user
   static async create(userData) {
-    const { username, email, password, full_name } = userData;
+    const { username, email, password } = userData;
     
     // Hash password
     const saltRounds = 10;
     const hashedPassword = await bcrypt.hash(password, saltRounds);
     
     const query = `
-      INSERT INTO users (username, email, password_hash, full_name) 
-      VALUES (?, ?, ?, ?)
+      INSERT INTO users (username, email, password_hash) 
+      VALUES (?, ?, ?)
     `;
     
     return new Promise((resolve, reject) => {
-      db.query(query, [username, email, hashedPassword, full_name], (err, results) => {
+      db.query(query, [username, email, hashedPassword], (err, results) => {
         if (err) reject(err);
         resolve(results);
       });
