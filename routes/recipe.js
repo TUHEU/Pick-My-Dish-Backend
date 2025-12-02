@@ -1,26 +1,40 @@
+// recipeRoutes.js
 const express = require('express');
-const router = express.Router();
+const multer = require('multer');
+const path = require('path');
 
-// Get all recipes
-router.get('/', (req, res) => {
-  res.json({ message: 'All recipes endpoint' });
+const storage = multer.diskStorage({
+  destination: (req, file, cb) => {
+    cb(null, 'uploads/recipes/');
+  },
+  filename: (req, file, cb) => {
+    cb(null, `recipe-${Date.now()}-${Math.random()}.jpg`);
+  }
 });
 
-// Get recipes by emotion
-router.get('/emotion/:emotion', (req, res) => {
-  const { emotion } = req.params;
-  res.json({ message: `Recipes for emotion: ${emotion}` });
+const upload = multer({ storage });
+
+router.post('/recipes', upload.single('image'), async (req, res) => {
+  try {
+    const { name, category, time, calories, ingredients, instructions, userId } = req.body;
+    
+    const recipe = await db.query(
+      `INSERT INTO recipes (user_id, name, category_id, cooking_time, calories, ingredients, instructions, image_path) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [userId || null, name, category, time, calories, ingredients, instructions, req.file?.path || null]
+    );
+    
+    res.status(201).json({ message: 'Recipe created', recipeId: recipe.insertId });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Search recipes
-router.get('/search', (req, res) => {
-  const { q } = req.query;
-  res.json({ message: `Search results for: ${q}` });
+router.get('/recipes', async (req, res) => {
+  try {
+    const recipes = await db.query('SELECT * FROM recipes');
+    res.json({ recipes });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
-
-// Get favorite recipes
-router.get('/favorites', (req, res) => {
-  res.json({ message: 'Favorite recipes endpoint' });
-});
-
-module.exports = router;
