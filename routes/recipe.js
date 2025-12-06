@@ -104,6 +104,9 @@ router.post('/recipes', upload.single('picture'), async (req, res) => {
 // 2. GET /api/recipes - Get all recipes (simplified)
 router.get('/recipes', async (req, res) => {
   try {
+    // First, log what the database query returns:
+  console.log('Raw database results:', JSON.stringify(recipes[0], null, 2));
+
     const [recipes] = await db.execute(`
       SELECT 
         r.id,
@@ -125,31 +128,20 @@ router.get('/recipes', async (req, res) => {
       ORDER BY r.created_at DESC
     `);
     
-    const formattedRecipes = recipes.map(recipe => {
-      // Parse ingredients from recipe_ingredients table
-      const ingredients = [];
-      if (recipe.ingredient_details) {
-        const items = recipe.ingredient_details.split(',');
-        items.forEach(item => {
-          const [name, quantity, unit] = item.split('|');
-          ingredients.push(`${quantity || ''} ${unit || ''} ${name}`.trim());
-        });
-      }
-      
-      return {
-        id: recipe.id,
-        name: recipe.name,
-        category: recipe.category,
-        time: recipe.time,
-        calories: recipe.calories,
-        image_path: recipe.image_path,
-        ingredients: ingredients.length > 0 ? ingredients : [],
-        instructions: recipe.steps ? JSON.parse(recipe.steps) : [],
-        mood: recipe.emotions ? JSON.parse(recipe.emotions) : [],
-        userId: recipe.userId,
-        isFavorite: false
-      };
-    });
+    // In your GET /api/recipes endpoint, add debugging and safe parsing:
+    const formattedRecipes = recipes.map(recipe => ({
+  id: recipe.id,
+  name: recipe.name,
+  category: recipe.category || 'Main Course',
+  time: recipe.time || '30 mins',
+  calories: recipe.calories || '0',
+  image_path: recipe.image_path || 'assets/recipes/test.png',
+  ingredients: ['Bread', 'Berries'], // Hardcoded for testing
+  instructions: ['Step 1', 'Step 2', 'Step 3'], // Hardcoded
+  mood: ['Happy', 'Quick'], // Hardcoded
+  userId: recipe.userId,
+  isFavorite: false
+}));
     
     res.json({ success: true, recipes: formattedRecipes });
   } catch (error) {
