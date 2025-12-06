@@ -120,22 +120,47 @@ router.get('/recipes', async (req, res) => {
     // Simple query to get all recipes
     const [recipes] = await db.execute(`
       SELECT 
-        r.*,
-        c.name as category_name,
-        u.username as author_name
-      FROM recipes r
-      LEFT JOIN categories c ON r.category_id = c.id
-      LEFT JOIN users u ON r.user_id = u.id
-      ORDER BY r.created_at DESC
+      r.id,
+      r.name,
+      r.cooking_time,
+      r.calories,
+      r.image_path,
+      r.ingredients_json,
+      r.emotions,
+      r.steps,
+      r.user_id,
+      c.name as category,
+      (
+        SELECT COUNT(*) 
+        FROM user_favorites uf 
+        WHERE uf.recipe_id = r.id
+      ) as favorite_count
+    FROM recipes r
+    LEFT JOIN categories c ON r.category_id = c.id
+    ORDER BY r.created_at DESC
     `);
     
     console.log(`✅ Found ${recipes.length} recipes`);
     
+    // Parse JSON fields and structure response
+    const formattedRecipes = recipes.map(recipe => ({
+      id: recipe.id,
+      name: recipe.name,
+      category: recipe.category || 'Main Course',
+      cooking_time: recipe.cooking_time,
+      calories: recipe.calories,
+      image_path: recipe.image_path || 'assets/recipes/test.png',
+      ingredients: JSON.parse(recipe.ingredients_json || '[]'),
+      steps: JSON.parse(recipe.steps || '[]'),
+      emotions: JSON.parse(recipe.emotions || '[]'),
+      user_id: recipe.user_id,
+      isFavorite: recipe.favorite_count > 0
+    }));
+
     // Return recipes as-is for now
     res.json({ 
       success: true,
-      count: recipes.length,
-      recipes: recipes 
+      recipes: formattedRecipes 
     });
     
   } catch (error) {
