@@ -158,5 +158,24 @@ router.get('/recipes', async (req, res) => {
   }
 });
 
+// GET /api/ingredients - For dropdown in app
+router.get('/ingredients', async (req, res) => {
+  try {
+    const [ingredients] = await db.execute('SELECT id, name FROM ingredients ORDER BY name');
+    res.json({ success: true, ingredients });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// GET /api/categories - For dropdown
+router.get('/categories', async (req, res) => {
+  try {
+    const [categories] = await db.execute('SELECT id, name FROM categories ORDER BY name');
+    res.json({ success: true, categories });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 
 module.exports = router;
