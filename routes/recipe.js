@@ -53,10 +53,22 @@ router.post('/recipes', upload.single('image'), async (req, res) => {
     } = req.body;
     
     // 2. PARSE THE JSON STRINGS HERE
-    const ingredients = ingredientsJson ? JSON.parse(ingredientsJson) : [];
-    const instructions = instructionsJson ? JSON.parse(instructionsJson) : [];
-    const emotions = emotionsJson ? JSON.parse(emotionsJson) : [];
+    let ingredients = [];
+    let instructions = [];
+    let emotions = [];
     
+    try {
+      ingredients = ingredientsJson ? JSON.parse(ingredientsJson) : [];
+      instructions = instructionsJson ? JSON.parse(instructionsJson) : [];
+      emotions = emotionsJson ? JSON.parse(emotionsJson) : [];
+    } catch (parseError) {
+      console.log('❌ JSON parse error:', parseError.message);
+      return res.status(400).json({ 
+        error: 'Invalid JSON data',
+        details: parseError.message 
+      });
+    }
+
     console.log('Parsed data:');
     console.log('Ingredients:', ingredients);
     console.log('Emotions:', emotions);
@@ -68,17 +80,6 @@ router.post('/recipes', upload.single('image'), async (req, res) => {
       [category]
     );
     const categoryId = categoryResult[0]?.id || 1;
-    
-    let emotionsArray = [];
-    try {
-      emotionsArray = emotions ? JSON.parse(emotions) : [];
-    } catch (e) {
-      console.log('❌ Error parsing emotions:', e);
-      // Try alternative format
-      if (typeof emotions === 'string') {
-        emotionsArray = [emotions];
-      }
-    }
 
     // 4. Insert recipe
     const [recipeResult] = await db.execute(
@@ -93,7 +94,7 @@ router.post('/recipes', upload.single('image'), async (req, res) => {
         time, 
         calories, 
         JSON.stringify(instructions),
-        JSON.stringify(emotionsArray),
+        JSON.stringify(emotions),
         req.file ? req.file.path : null
       ]
     );
