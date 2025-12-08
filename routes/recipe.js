@@ -39,6 +39,7 @@ const upload = multer({
 // 1. POST /api/recipes - Create recipe with picture
 router.post('/recipes', upload.single('image'), async (req, res) => {
   try {
+    console.log('📥 Received form data:', req.body);
     // 1. Get all fields from req.body
     const { 
       name, 
@@ -68,6 +69,17 @@ router.post('/recipes', upload.single('image'), async (req, res) => {
     );
     const categoryId = categoryResult[0]?.id || 1;
     
+    let emotionsArray = [];
+    try {
+      emotionsArray = emotions ? JSON.parse(emotions) : [];
+    } catch (e) {
+      console.log('❌ Error parsing emotions:', e);
+      // Try alternative format
+      if (typeof emotions === 'string') {
+        emotionsArray = [emotions];
+      }
+    }
+
     // 4. Insert recipe
     const [recipeResult] = await db.execute(
       `INSERT INTO recipes 
@@ -81,7 +93,7 @@ router.post('/recipes', upload.single('image'), async (req, res) => {
         time, 
         calories, 
         JSON.stringify(instructions),
-        JSON.stringify(emotions),
+        JSON.stringify(emotionsArray),
         req.file ? req.file.path : null
       ]
     );
