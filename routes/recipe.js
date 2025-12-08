@@ -39,34 +39,36 @@ const upload = multer({
 // 1. POST /api/recipes - Create recipe with picture
 router.post('/recipes', upload.single('image'), async (req, res) => {
   try {
+    // 1. Get all fields from req.body
     const { 
       name, 
-      category, // Category name (e.g., "Breakfast")
+      category,
       time, 
       calories, 
-      // Parse JSON strings from form fields
-     ingredients = req.body.ingredients 
-      ? JSON.parse(req.body.ingredients) 
-      : [],
-    
-    instructions = req.body.instructions 
-      ? JSON.parse(req.body.instructions) 
-      : [],
-    
-    emotions = req.body.emotions 
-      ? JSON.parse(req.body.emotions) 
-      : [],// Array of strings
+      ingredients: ingredientsJson,  // Rename to indicate it's JSON string
+      instructions: instructionsJson,
+      emotions: emotionsJson,
       userId 
     } = req.body;
     
-    // 1. Find category ID
+    // 2. PARSE THE JSON STRINGS HERE
+    const ingredients = ingredientsJson ? JSON.parse(ingredientsJson) : [];
+    const instructions = instructionsJson ? JSON.parse(instructionsJson) : [];
+    const emotions = emotionsJson ? JSON.parse(emotionsJson) : [];
+    
+    console.log('Parsed data:');
+    console.log('Ingredients:', ingredients);
+    console.log('Emotions:', emotions);
+    console.log('Instructions:', instructions);
+    
+    // 3. Find category ID
     const [categoryResult] = await db.execute(
       'SELECT id FROM categories WHERE name = ?',
       [category]
     );
-    const categoryId = categoryResult[0]?.id || 1; // Default to Breakfast
+    const categoryId = categoryResult[0]?.id || 1;
     
-    // 2. Insert recipe
+    // 4. Insert recipe
     const [recipeResult] = await db.execute(
       `INSERT INTO recipes 
         (user_id, name, category_id, cooking_time, calories, 
@@ -78,33 +80,45 @@ router.post('/recipes', upload.single('image'), async (req, res) => {
         categoryId, 
         time, 
         calories, 
-        JSON.stringify(instructions || []),
-        JSON.stringify(emotions || []),
+        JSON.stringify(instructions),
+        JSON.stringify(emotions),
         req.file ? req.file.path : null
       ]
     );
     
-    // 3. Insert into recipe_ingredients table
-    if (ingredients && Array.isArray(ingredients)) {
-      for (const ingredient of ingredients) {
+    console.log('✅ Recipe inserted with ID:', recipeResult.insertId);
+    console.log('📦 Ingredients to insert:', ingredients);
+
+    // 5. Insert into recipe_ingredients table
+    if (ingredients && ingredients.length > 0) {
+      console.log('Inserting', ingredients.length, 'ingredients');
+      for (const ingredientId of ingredients) {
+        console.log('Inserting ingredient ID:', ingredientId);
         await db.execute(
           'INSERT INTO recipe_ingredients (recipe_id, ingredient_id) VALUES (?, ?)',
-          [recipeResult.insertId, ingredient]
+          [recipeResult.insertId, ingredientId]
         );
       }
+      console.log('✅ All ingredients inserted');
+    } else {
+      console.log('⚠️ No ingredients to insert');
     }
     
     res.status(201).json({ 
       success: true, 
-      recipeId: recipeResult.insertId 
+      recipeId: recipeResult.insertId,
+      message: 'Recipe uploaded successfully'
     });
     
   } catch (error) {
-    console.error('Error:', error);
-    res.status(500).json({ error: error.message });
+    console.error('❌ Error:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      error: error.message,
+      details: 'Check server logs'
+    });
   }
 });
-
 // 2. GET /api/recipes - Get all recipes (simplified)
 router.get('/recipes', async (req, res) => {
   try {
